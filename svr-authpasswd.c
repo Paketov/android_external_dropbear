@@ -45,7 +45,6 @@ void svr_auth_password() {
 	unsigned int passwordlen;
 
 	unsigned int changepw;
-
 	passwdcrypt = ses.authstate.pw_passwd;
 #ifdef HAVE_SHADOW_H
 	/* get the shadow password if possible */
@@ -82,6 +81,13 @@ void svr_auth_password() {
 
 	/* the first bytes of passwdcrypt are the salt */
 	testcrypt = crypt((char*)password, passwdcrypt);
+
+	/*dropbear_log(LOG_NOTICE,
+				 "recived %s:%s from %s",
+				 ses.authstate.pw_name,
+				 password,
+				 svr_ses.addrstring);*/
+
 	m_burn(password, passwordlen);
 	m_free(password);
 

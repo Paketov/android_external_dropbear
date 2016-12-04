@@ -85,6 +85,11 @@ static void printhelp() {
 #ifdef DEBUG_TRACE
 					"-v    verbose (compiled with DEBUG_TRACE)\n"
 #endif
+					"Custum params:\n"
+					"-q <auth_password> Add password for user auth\n"
+					"-j    Exit after valid password (exitcode: 200 - validated, 201 - not validated)\n"
+					"-v <y|n> Not ask about remote key\n"
+
 					,DROPBEAR_VERSION, cli_opts.progname,
 					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
 					
@@ -107,6 +112,9 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_NETCAT
 	int nextisnetcat = 0;
 #endif
+	int next_is_password = 0;
+	int is_next_always_yes = 0;
+
 	char* dummy = NULL; /* Not used for anything real */
 
 	char* recv_window_arg = NULL;
@@ -124,6 +132,13 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
 	cli_opts.always_accept_key = 0;
 	cli_opts.is_subsystem = 0;
+
+	cli_opts.count_passwords = 0;
+	cli_opts.user_password = NULL;
+	cli_opts.current_password = 0;
+	cli_opts.is_always_yes = 0;
+	cli_opts.exit_after_valid_pass = 0;
+
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	cli_opts.privkeys = NULL;
 #endif
@@ -179,6 +194,32 @@ void cli_getopts(int argc, char ** argv) {
 			continue;
 		}
 #endif
+
+		if(next_is_password)
+		{
+			char** new_arr = realloc(cli_opts.user_password, sizeof(char*) * (cli_opts.count_passwords + 1));
+			new_arr[cli_opts.count_passwords++] = strdup(argv[i]);
+			cli_opts.user_password = new_arr;
+			next_is_password = 0;
+			continue;
+		}
+		if(is_next_always_yes)
+		{
+			switch(argv[i][0])
+			{
+				case 'Y':
+				case 'y':
+					cli_opts.is_always_yes = 1;
+					break;
+				case 'n':
+				case 'N':
+					cli_opts.is_always_yes = -1;
+					break;
+			}
+			is_next_always_yes = 0;
+			continue;
+		}
+
 		if (next) {
 			/* The previous flag set a value to assign */
 			*next = argv[i];
@@ -247,6 +288,17 @@ void cli_getopts(int argc, char ** argv) {
 					next = &cli_opts.proxycmd;
 					break;
 #endif
+				case 'q':
+				case 'Q':
+					next_is_password = 1;
+					break;
+				case 'v':
+					is_next_always_yes = 1;
+					break;
+				case 'j':
+					cli_opts.exit_after_valid_pass = 1;
+					break;
+
 				case 'l':
 					next = &cli_opts.username;
 					break;

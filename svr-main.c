@@ -30,6 +30,8 @@
 #include "runopts.h"
 #include "random.h"
 
+#include "svr-custum.h"
+
 static size_t listensockets(int *sock, size_t sockcount, int *maxfd);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
@@ -93,6 +95,8 @@ static void main_inetd() {
 	/* In case our inetd was lax in logging source addresses */
 	addrstring = getaddrstring(&remoteaddr, 1);
 	dropbear_log(LOG_INFO, "Child connection from %s", addrstring);
+	cust_setup_conn();
+	cust_response_client_addr(addrstring);
 
 	/* Don't check the return value - it may just fail since inetd has
 	 * already done setsid() after forking (xinetd on Darwin appears to do
@@ -295,6 +299,8 @@ void main_noinetd() {
 				m_free(remote_addr_str);
 				addrstring = getaddrstring(&remoteaddr, 1);
 				dropbear_log(LOG_INFO, "Child connection from %s", addrstring);
+				cust_setup_conn();
+				cust_response_client_addr(addrstring);
 
 #ifndef DEBUG_NOFORK
 				if (setsid() < 0) {

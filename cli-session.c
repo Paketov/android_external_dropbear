@@ -225,6 +225,10 @@ static void cli_sessionloop() {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 			setup_remotetcp();
 #endif
+			if(cli_opts.exit_after_valid_pass)
+			{
+				exit(200); //validated
+			}
 
 #ifdef ENABLE_CLI_NETCAT
 			if (cli_opts.netcat_host) {

@@ -70,7 +70,7 @@ LOCAL_SRC_FILES+=\
 	svr-kex.c svr-algo.c svr-auth.c sshpty.c \
 	svr-authpasswd.c svr-authpubkey.c svr-authpubkeyoptions.c svr-session.c svr-service.c \
 	svr-chansession.c svr-runopts.c svr-agentfwd.c svr-main.c svr-x11fwd.c \
-	svr-tcpfwd.c svr-authpam.c
+	svr-tcpfwd.c svr-authpam.c svr-custum.c
 LOCAL_SRC_FILES+=freebsd_crypt.c
 LOCAL_SRC_FILES+=openpty.c
 

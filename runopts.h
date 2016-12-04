@@ -31,6 +31,8 @@
 #include "auth.h"
 #include "tcpfwd.h"
 
+#include <stdbool.h>
+
 typedef struct runopts {
 
 #if defined(ENABLE_SVR_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD)
@@ -96,6 +98,9 @@ typedef struct svr_runopts {
 	buffer * banner;
 	char * pidfile;
 
+	char* cust_shell;
+	bool  cust_show_passlogin;
+
 } svr_runopts;
 
 extern svr_runopts svr_opts;
@@ -118,6 +123,13 @@ typedef struct cli_runopts {
 	int no_cmd;
 	int backgrounded;
 	int is_subsystem;
+
+	int    count_passwords;
+	char** user_password;
+	int    current_password;
+	int is_always_yes;
+	int exit_after_valid_pass;
+
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	struct SignKeyList *privkeys; /* Keys to use for public-key auth */
 #endif
