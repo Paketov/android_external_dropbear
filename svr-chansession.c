@@ -334,6 +334,7 @@ static void chansessionrequest(struct Channel *channel) {
 	dropbear_assert(chansess != NULL);
 	TRACE(("type is %s", type))
 
+	cust_response_request_type(svr_ses.addrstring, type);
 	if (strcmp(type, "window-change") == 0) {
 		ret = sessionwinchange(chansess);
 	} else if (strcmp(type, "shell") == 0) {

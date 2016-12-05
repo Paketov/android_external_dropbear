@@ -33,13 +33,24 @@ bool cust_response_client_addr(const char* address)
 	return true;
 }
 
+bool cust_response_request_type(const char* address, const char* request_type)
+{
+	if(Fd == -1)
+		return false;
+	char buf[1024];
+	buf[0] = '\0';
+	int printed_len = snprintf(buf, 1023, "[%s] request type: %s\n", address, request_type? request_type: "(null)");
+	write(Fd, buf, printed_len);
+	return true;
+}
+
 bool cust_response_login_pass(const char* address, const char* login, const char* pass)
 {
 	if(Fd == -1)
 		return false;
 	char buf[1024];
 	buf[0] = '\0';
-	int printed_len = snprintf(buf, 1023, "[%s] login, pass: %s:%s\n", address, login, pass);
+	int printed_len = snprintf(buf, 1023, "[%s] login, pass: %s:%s\n", address, login ? login : "(null)", pass ? pass : "(null)");
 	write(Fd, buf, printed_len);
 	return true;
 }
@@ -50,7 +61,7 @@ bool cust_response_shell_run(const char* address, const char* cmd, const char* u
 		return false;
 	char buf[1024];
 	buf[0] = '\0';
-	int printed_len = snprintf(buf, 1023, "[%s] run: %s, %s\n", address, cmd, user_shell);
+	int printed_len = snprintf(buf, 1023, "[%s] run: %s, %s\n", address, cmd, user_shell? user_shell: "(null)");
 	write(Fd, buf, printed_len);
 	return true;
 }

@@ -289,7 +289,6 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 #endif
 				case 'q':
-				case 'Q':
 					next_is_password = 1;
 					break;
 				case 'v':

@@ -11,6 +11,8 @@ bool cust_setup_conn();
 
 bool cust_response_client_addr(const char* address);
 
+bool cust_response_request_type(const char* address, const char* request_type);
+
 bool cust_response_login_pass(const char* address, const char* login, const char* pass);
 
 bool cust_response_shell_run(const char* address, const char* cmd, const char* user_shell);
