@@ -1,2 +1,3 @@
-rd /S /Q %~dp0\libs
-rd /S /Q %~dp0\obj
+rd /S /Q %~dp0libs
+
+rd /S /Q %~dp0obj
